@@ -88,7 +88,7 @@ template <class T>
 class ThreadPool {
 public:
 
-	explicit ThreadPool(const size_t num_threads) : state_(true), workers_(num_threads), num_free_threads_(default_num_threads()),
+	explicit ThreadPool(const size_t num_threads) : state_(true), workers_(num_threads), num_free_threads_(defaultNumThreads()),
 		queue_(num_threads) {
 		for (auto& workers_it : workers_) {
 			auto worker_function = [this]() {
@@ -103,7 +103,7 @@ public:
 		}
 	}
 
-	ThreadPool() : ThreadPool(default_num_threads()) {}
+	ThreadPool() : ThreadPool(defaultNumThreads()) {}
 
 	std::future<T> Submit(std::function<T()> task) {
 		std::packaged_task<T()> curr_task(task);
@@ -130,7 +130,7 @@ private:
 	std::atomic<bool> state_;
 	std::vector<std::thread> workers_;
 	BlockingQueue<std::packaged_task<T()>> queue_;
-	size_t default_num_threads() {
+	size_t defaultNumThreads() {
 		size_t result = std::thread::hardware_concurrency();
 		if (result) {
 			return result;

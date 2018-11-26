@@ -31,15 +31,17 @@ public: \
 std::map<std::string, std::function<void(void*)>> nameDerived::derivedMethodsMap = {}; \
 std::string nameDerived::className = (std::string)#nameDerived;
 
-#define DECLARE_METHOD( nameClass, nameMethod ) { \
+#define DECLARE_METHOD( nameClass, nameMethod, Body ) { \
 if (nameClass::baseClassName == (std::string)#nameClass) { \
 	nameClass::methodsMap[(std::string)#nameMethod] = [] (void* ptr) { \
-		std::cout << static_cast<nameClass*>(ptr)->className << "::" << #nameMethod << std::endl; \
+		std::cout << static_cast<nameClass*>(ptr)->className << "::" << #nameMethod << ' '; \
+		[](nameClass* self){ Body; }(static_cast<nameClass*>(ptr));  \
 	}; \
 } \
 else { \
 	nameClass::derivedMethodsMap[(std::string)#nameMethod] = [] (void* ptr) { \
-		std::cout << static_cast<nameClass*>(ptr)->className << "::" << #nameMethod << std::endl; \
+		std::cout << static_cast<nameClass*>(ptr)->className << "::" << #nameMethod << ' '; \
+		[](nameClass* self){ Body; }(static_cast<nameClass*>(ptr)); \
 	}; \
 } \
 }
@@ -74,13 +76,14 @@ END_DERIVE(Derived, Base)
 
 int main()
 {
-	DECLARE_METHOD(Base, Both);
-	DECLARE_METHOD(Base, OnlyBase);
-	DECLARE_METHOD(Derived, Both);
-	DECLARE_METHOD(Derived, OnlyDerived);
+	DECLARE_METHOD(Base, Both, std::cout << self->a << std::endl );
+	DECLARE_METHOD(Base, OnlyBase, std::cout << std::endl );
+	DECLARE_METHOD(Derived, Both, std::cout << self->b << std::endl );
+	DECLARE_METHOD(Derived, OnlyDerived, std::cout << std::endl );
 	Base base;
 	base.a = 0;
 	Derived derived;
+	derived.b = 1;
 	Base* reallyDerived = reinterpret_cast<Base*>(&derived);
 	VIRTUAL_CALL(static_cast<Base*>(&base), Both);
 	VIRTUAL_CALL(reallyDerived, Both);
